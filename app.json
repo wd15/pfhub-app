@@ -1,0 +1,14 @@
+{
+  "name": "PFHub App",
+  "description": "App running on Heroku to support PFHub",
+  "image": "heroku/python",
+  "repository": "https://github.com/wd15/pfhub-app",
+  "keywords": ["python", "fastapi" ],
+  "env": {
+  },
+  "environments": {
+    "test": {
+      "scripts": {}
+    }
+  }
+}

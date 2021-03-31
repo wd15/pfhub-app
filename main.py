@@ -99,6 +99,12 @@ def if_(if_func, func, arg):
     return arg
 
 
+@app.get("/hello")
+async def hello():
+    return "Hello"
+
+
+
 @app.get("/get/")
 async def get_binary_file(url: UrlStr):
     """Base endpoint to get binary file

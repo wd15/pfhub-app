@@ -22,6 +22,7 @@ in
       flake8
       pkgs.google-cloud-sdk
       pytest
+      pkgs.heroku
     ];
 
     shellHook = ''

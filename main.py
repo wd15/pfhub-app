@@ -1,37 +1,4 @@
-"""Run this with
-
-    $ uvicorn main:app --reload
-
-Test the GET with
-
-    $ url="https://drive.google.com/open?id=19oJVHZ6zaw47TN43E5qk-uGRsqrz0iE7"
-    $ curl -L -o out.csv http://localhost:8000/get/?url=$url
-
-    $ url="https://drive.google.com/open?id=1he7ilLH2VTD740OGPJXOq8CSn7utEDf_"
-    $ curl -L -o out.png "http://localhost:8000/get/?url=$url"
-
-Test comments with (remember to change allow_origins to ["*"] to test
-on app engine from local machine)
-
-    $ export APP_URL="https://ace-thought-249120.appspot.com" # or "http://localhost:8000"
-    $ export TRAVIS_PULL_REQUEST_BRANCH=\
-"staticman_2fe75e40-153a-11ea-b835-9d4c1360ea39" # or "blah' for no staticman
-    $ export TRAVIS_PULL_REQUEST="1114"
-    $ export TRAVIS_REPO_SLUG="usnistgov/pfhub"
-    $ export DOMAIN="random-cat-1114.surge.sh"
-    $ curl ${APP_URL}/comment/ \
-      -H "Content-Type: application/json" \
-      -X POST -d "$( envsubst < _app/payload.json )"
-
-Setting env vars in YAML
-
-  https://stackoverflow.com/questions/22669528/securely-storing-environment-variables-in-gae-with-app-yaml
-
-Create 'env_variables.yaml' with
-
-env_variables:
-  GITHUB_TOKEN: xxxxxx
-
+"""See the README.md for testing instructions.
 """
 
 import re

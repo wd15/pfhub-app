@@ -19,6 +19,12 @@ Test the Python modules with
 
 Test the local version with
 
+Start memcache server with `sudo /etc/init.d/memcached restart`.
+
+    $ export MEMCACHIER_SERVERS="127.0.0.1:11211"
+    $ export MEMCACHIER_USERNAME="user"
+    $ export MEMCACHIER_PASSWORD="password"
+
     $ url="https://drive.google.com/open?id=19oJVHZ6zaw47TN43E5qk-uGRsqrz0iE7"
     $ curl -L -o out.csv http://localhost:8000/get/?url=$url
 
@@ -45,3 +51,6 @@ Test it.
     $ curl ${APP_URL}/comment/ \
       -H "Content-Type: application/json" \
       -X POST -d "$( envsubst < payload.json )"
+
+A comment should appear in the PR and some JSON should be returned
+with the comment in the "body".

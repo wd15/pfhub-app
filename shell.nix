@@ -23,6 +23,7 @@ in
       pkgs.google-cloud-sdk
       pytest
       pkgs.heroku
+      pkgs.memcached
     ];
 
     shellHook = ''

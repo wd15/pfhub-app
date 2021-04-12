@@ -5,14 +5,29 @@ import re
 from io import BytesIO
 import json
 import os
+from functools import wraps
 
 from fastapi import FastAPI
 import requests
-from toolz.curried import curry, get, compose
+from toolz.curried import curry, get, compose, memoize
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import StreamingResponse
 from pydantic import BaseModel, UrlStr
 import archieml
+import bmemcached
+
+
+@memoize
+def memcached_client():
+    """Get the memcached client.
+    """
+    client = bmemcached.Client(
+        os.environ.get("MEMCACHIER_SERVERS", "").split(","),
+        os.environ.get("MEMCACHIER_USERNAME", ""),
+        os.environ.get("MEMCACHIER_PASSWORD", ""),
+    )
+    client.enable_retry_delay(True)  # Enabled by default. Sets retry delay to 5s.
+    return client
 
 
 def sequence(*args):
@@ -66,10 +81,34 @@ def if_(if_func, func, arg):
     return arg
 
 
-@app.get("/hello")
-async def hello():
-    return "Hello"
+@curry
+def memcached(func):
+    """Use memcached to cache the results of a function.
 
+    Must have the memcached server running.
+    """
+
+    def wrapper(key, *args, **kwargs):
+        value = memcached_client().get(key)
+        if value is None:
+            value = func(key, *args, **kwargs)
+            memcached_client().set(key, value)
+        return value
+
+    return wraps(func)(wrapper)
+
+
+@memcached
+def download(url: UrlStr):
+    """Download data from URL.
+
+    Returns a tuple of the content, and content type.
+    """
+    return sequence(
+        if_(search(r"https://drive\.google\.com(.*)"), modify_google),
+        requests.get,
+        lambda x: (x.content, str(x.headers["content-type"])),
+    )(url)
 
 
 @app.get("/get/")
@@ -77,9 +116,8 @@ async def get_binary_file(url: UrlStr):
     """Base endpoint to get binary file
     """
     return sequence(
-        if_(search(r"https://drive\.google\.com(.*)"), modify_google),
-        requests.get,
-        lambda x: (BytesIO(x.content), x.headers["content-type"]),
+        download,
+        lambda x: (BytesIO(x[0]), x[1]),
         lambda x: StreamingResponse(x[0], media_type=x[1]),
     )(url)
 

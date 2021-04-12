@@ -4,3 +4,4 @@ toolz==0.9.0
 email-validator
 requests==2.21.0
 archieml==0.3.4
+python-binary-memcached==0.20.0

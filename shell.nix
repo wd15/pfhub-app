@@ -24,6 +24,7 @@ in
       pytest
       pkgs.heroku
       pkgs.memcached
+      matplotlib
     ];
 
     shellHook = ''

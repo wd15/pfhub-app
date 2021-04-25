@@ -6,24 +6,24 @@ This is deployed on Heroku.
 
 ### Local Python tests
 
+Start memcache server with `sudo /etc/init.d/memcached restart`.
+
+
 Run with
 
     $ nix-shell --pure
+    [nix-shell]$ export MEMCACHIER_SERVERS="127.0.0.1:11211"
+    [nix-shell]$ export MEMCACHIER_USERNAME="user"
+    [nix-shell]$ export MEMCACHIER_PASSWORD="password"
     [nix-shell]$ uvicorn main:app --reload
 
 Test the Python modules with
 
-    [nix-shell]$ py.test test.py
+    [nix-shell]$ py.test --doctest-modules test.py contour.py
 
 ### File downloads
 
 Test the local version with
-
-Start memcache server with `sudo /etc/init.d/memcached restart`.
-
-    $ export MEMCACHIER_SERVERS="127.0.0.1:11211"
-    $ export MEMCACHIER_USERNAME="user"
-    $ export MEMCACHIER_PASSWORD="password"
 
     $ url="https://drive.google.com/open?id=19oJVHZ6zaw47TN43E5qk-uGRsqrz0iE7"
     $ curl -L -o out.csv http://localhost:8000/get/?url=$url
@@ -32,6 +32,12 @@ Start memcache server with `sudo /etc/init.d/memcached restart`.
     $ curl -L -o out.png "http://localhost:8000/get/?url=$url"
 
 to test both a binary and non-binary file download.
+
+Test zero contour calcuation
+
+    $ url="https://gist.githubusercontent.com/wd15/7da4626088f0920d0b5bac5727784ef9/raw/6f39388cab76024a48709aa4dcfeccbef68f0f87/phi_fixed.csv"
+    $ curl -L -o out.csv "http://localhost:8000/get_contour/?url=$url&z_col=phi"
+
 
 ### Commenting
 

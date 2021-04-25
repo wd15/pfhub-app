@@ -151,17 +151,21 @@ async def get_contour(
         df.columns,
         filter_(lambda y: s in y),
         list,
-        lambda x: sorted(x, key=len, reverse=False)
+        lambda x: sorted(x, key=len, reverse=False),
     )
 
     cols = sequence(
         lambda x: x.rename(columns=str.lower),
         lambda x: x.rename(columns=str.strip),
-        lambda x: x[[
-            col_names(x, 'x')[0],
-            col_names(x, 'y')[0],
-            (col_names(x, 'phi') + col_names(x, 'phase') + col_names(x, 'field'))[0]
-        ]]
+        lambda x: x[
+            [
+                col_names(x, "x")[0],
+                col_names(x, "y")[0],
+                (col_names(x, "phi") + col_names(x, "phase") + col_names(x, "field"))[
+                    0
+                ],
+            ]
+        ],
     )
 
     def to_string(dataframe):

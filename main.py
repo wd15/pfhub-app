@@ -1,20 +1,29 @@
 """See the README.md for testing instructions.
+
+To flush the cache use `memcached_client().flush_all()` somewhere that
+runs and is outside of a memcached function.
+
 """
 
 import re
-from io import BytesIO
+import io
 import json
 import os
 from functools import wraps
+from typing import List
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 import requests
-from toolz.curried import curry, get, compose, memoize
+from toolz.curried import curry, get, compose, memoize, identity, pipe
+from toolz.curried import filter as filter_
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import StreamingResponse
 from pydantic import BaseModel, UrlStr
 import archieml
 import bmemcached
+import pandas
+import numpy
+from contour import calc_contour_vertices
 
 
 @memoize
@@ -99,7 +108,7 @@ def memcached(func):
 
 
 @memcached
-def download(url: UrlStr):
+def download(url: UrlStr, func):
     """Download data from URL.
 
     Returns a tuple of the content, and content type.
@@ -107,19 +116,72 @@ def download(url: UrlStr):
     return sequence(
         if_(search(r"https://drive\.google\.com(.*)"), modify_google),
         requests.get,
-        lambda x: (x.content, str(x.headers["content-type"])),
+        lambda x: (func(x.content), str(x.headers["content-type"])),
     )(url)
+
+
+def file_response(url: UrlStr, func):
+    """Generic function to download a file, process it and stream.
+
+    """
+    return pipe(
+        download(url, func),
+        lambda x: (io.BytesIO(x[0]), x[1]),
+        lambda x: StreamingResponse(x[0], media_type=x[1]),
+    )
 
 
 @app.get("/get/")
 async def get_binary_file(url: UrlStr):
     """Base endpoint to get binary file
     """
-    return sequence(
-        download,
-        lambda x: (BytesIO(x[0]), x[1]),
-        lambda x: StreamingResponse(x[0], media_type=x[1]),
-    )(url)
+    return file_response(url, identity)
+
+
+@app.get("/get_contour/")
+async def get_contour(
+    url: UrlStr,
+    contour_value: float = 0.5,
+    fill_value: float = 0.0,
+    domain: List[float] = Query([-50.0, 50.0]),
+):
+    """Base endpoint to get a binary csv file and calcuate the zero contour
+    """
+    col_names = lambda df, s: pipe(
+        df.columns,
+        filter_(lambda y: s in y),
+        list,
+        lambda x: sorted(x, key=len, reverse=False)
+    )
+
+    cols = sequence(
+        lambda x: x.rename(columns=str.lower),
+        lambda x: x.rename(columns=str.strip),
+        lambda x: x[[
+            col_names(x, 'x')[0],
+            col_names(x, 'y')[0],
+            (col_names(x, 'phi') + col_names(x, 'phase') + col_names(x, 'field'))[0]
+        ]]
+    )
+
+    def to_string(dataframe):
+        string_ = io.StringIO()
+        dataframe.to_csv(string_, index=False)
+        return bytearray(string_.getvalue(), "utf8")
+
+    process = sequence(
+        io.BytesIO,
+        pandas.read_csv,
+        cols,
+        numpy.array,
+        calc_contour_vertices(
+            domain=domain, fill_value=fill_value, contour_value=contour_value
+        ),
+        lambda x: pandas.DataFrame(x, columns=["x", "y"]),
+        to_string,
+    )
+
+    return file_response(url, process)
 
 
 class CiData(BaseModel):

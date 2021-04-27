@@ -12,9 +12,6 @@ Start memcache server with `sudo /etc/init.d/memcached restart`.
 Run with
 
     $ nix-shell --pure
-    [nix-shell]$ export MEMCACHIER_SERVERS="127.0.0.1:11211"
-    [nix-shell]$ export MEMCACHIER_USERNAME="user"
-    [nix-shell]$ export MEMCACHIER_PASSWORD="password"
     [nix-shell]$ uvicorn main:app --reload
 
 Test the Python modules with

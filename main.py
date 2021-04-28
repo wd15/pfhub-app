@@ -15,7 +15,6 @@ from typing import List
 from fastapi import FastAPI, Query
 import requests
 from toolz.curried import curry, get, compose, memoize, identity, pipe
-from toolz.curried import filter as filter_
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import StreamingResponse
 from pydantic import BaseModel, UrlStr
@@ -144,29 +143,12 @@ async def get_contour(
     contour_value: float = 0.5,
     fill_value: float = 0.0,
     domain: List[float] = Query([-50.0, 50.0]),
+    cols: List[str] = Query(["x", "y", "z"]),
 ):
     """Base endpoint to get a binary csv file and calcuate the zero contour
     """
-    col_names = lambda df, s: pipe(
-        df.columns,
-        filter_(lambda y: s in y),
-        list,
-        lambda x: sorted(x, key=len, reverse=False),
-    )
 
-    cols = sequence(
-        lambda x: x.rename(columns=str.lower),
-        lambda x: x.rename(columns=str.strip),
-        lambda x: x[
-            [
-                col_names(x, "x")[0],
-                col_names(x, "y")[0],
-                (col_names(x, "phi") + col_names(x, "phase") + col_names(x, "field"))[
-                    0
-                ],
-            ]
-        ],
-    )
+    # memcached_client().flush_all()
 
     def to_string(dataframe):
         string_ = io.StringIO()
@@ -176,7 +158,7 @@ async def get_contour(
     process = sequence(
         io.BytesIO,
         pandas.read_csv,
-        cols,
+        lambda x: x[cols],
         numpy.array,
         calc_contour_vertices(
             domain=domain, fill_value=fill_value, contour_value=contour_value

@@ -38,5 +38,9 @@ in
       export PATH=$PATH:$PYTHONUSERBASE/bin
 
       pip install --user archieml
+
+      export MEMCACHIER_SERVERS="127.0.0.1:11211"
+      export MEMCACHIER_USERNAME="user"
+      export MEMCACHIER_PASSWORD="password"
     '';
   }

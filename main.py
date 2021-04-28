@@ -149,6 +149,7 @@ async def get_contour(
     """
 
     # memcached_client().flush_all()
+
     def to_string(dataframe):
         string_ = io.StringIO()
         dataframe.to_csv(string_, index=False)
